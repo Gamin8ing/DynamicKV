@@ -1,6 +1,5 @@
 const databaseService = require('../services/Database.service');
 const { validationResult } = require('express-validator');
-const { model } = require('mongoose');
 const userModel = require('../models/User.model');
 
 module.exports.createDatabase = async (req, res) => {
@@ -8,14 +7,13 @@ module.exports.createDatabase = async (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    const { dbName, dbType, dbSize, dbLocation } = req.body;
+    const { dbName, dbType, dbSize } = req.body;
     const userId = req.user._id;
     try {
         const database = await databaseService.createDatabase({
             dbName,
             dbType,
             dbSize,
-            dbLocation,
             userId
         });
         res.status(201).json(database);

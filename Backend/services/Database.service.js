@@ -3,16 +3,16 @@ const userModel = require('../models/User.model');
 const mongoose = require('mongoose');
 
 module.exports.createDatabase = async ({
-    dbName, dbType, dbSize, dbLocation
+    dbName, dbType, dbSize, userId
 }) => {
-    if (!dbName || !dbType || !dbSize || !dbLocation) {
+    if (!dbName || !dbType || !dbSize || !userId) {
         throw new Error('All fields are required');
     }
     const database = await databaseModel.create({
         dbName,
         dbType,
         dbSize,
-        dbLocation
+        userId,
     });
     return database;
 }
