@@ -1,12 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react'
+import API from '../../utils/api'
 
 const Users = () => {
-  // Sample user data (replace with API data in a real application)
-  const users = [
-    { id: 1, name: 'John Doe', email: 'john@example.com' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
-    { id: 3, name: 'Bob Johnson', email: 'bob@example.com' },
-  ];
+  // State for users, loading, and error
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    // Fetch users from backend
+    API.get('/admin/users')
+      .then(res => {
+        setUsers(res.data)
+      })
+      .catch(err => {
+        console.error('Error fetching users:', err)
+        setError('Failed to load users.')
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <p className="text-gray-600">Loading users...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-100 rounded-lg">
+        <p className="text-red-600">{error}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md">
@@ -37,7 +65,7 @@ const Users = () => {
         </table>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Users;
+export default Users

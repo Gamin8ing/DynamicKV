@@ -1,16 +1,38 @@
 // src/pages/Admin/Orders.jsx
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
+import API from '../../utils/api';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // TODO: fetch your orders from API
-    // fetch('/api/admin/orders', { headers: { Authorization: `Bearer ${token}` }})
-    //   .then(res => res.json())
-    //   .then(data => setOrders(data));
+    API.get('/admin/orders')
+      .then(res => setOrders(res.data))
+      .catch(err => {
+        console.error('Error fetching orders:', err);
+        setError('Failed to load orders.');
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <p className="text-gray-600">Loading orders...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-100 rounded-lg">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

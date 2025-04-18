@@ -1,16 +1,38 @@
 // src/pages/Admin/Products.jsx
 import React, { useEffect, useState } from 'react';
 import { Package, Plus } from 'lucide-react';
+import API from '../../utils/api';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // TODO: fetch your products from API
-    // fetch('/api/admin/products', { headers: { Authorization: `Bearer ${token}` }})
-    //   .then(res => res.json())
-    //   .then(data => setProducts(data));
+    API.get('/admin/products')
+      .then(res => setProducts(res.data))
+      .catch(err => {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products.');
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <p className="text-gray-600">Loading products...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-100 rounded-lg">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
