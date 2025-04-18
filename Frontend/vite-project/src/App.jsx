@@ -3,8 +3,8 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 
 import Home          from './pages/Home.jsx'
-import UserLogin     from './pages/UserLogin.jsx'
-import UserSignup    from './pages/UserSignup.jsx'
+import UserLogin     from './pages/User/UserLogin.jsx'
+import UserSignup    from './pages/User/UserSignup.jsx'
 
 import AdminLayout   from './components/Admin/AdminLayout.jsx'
 //import AdminLogin    from './pages/Admin/AdminLogin.jsx'
