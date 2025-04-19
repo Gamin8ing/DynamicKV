@@ -7,7 +7,7 @@ import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 // Auth pages
 import UserLogin from './pages/User/UserLogin';
 import UserSignup from './pages/User/UserSignup';
-import Home from './pages/Home';
+import Home from './pages/User/Home';
 
 // Admin pages
 import AdminDashboard from './pages/Admin/DashBoard';
