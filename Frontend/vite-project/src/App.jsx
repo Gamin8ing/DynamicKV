@@ -1,42 +1,53 @@
 // src/App.jsx
-import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { UserProvider } from './context/UserContext';
+import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 
-import Home          from './pages/Home.jsx'
-import UserLogin     from './pages/User/UserLogin.jsx'
-import UserSignup    from './pages/User/UserSignup.jsx'
+// Auth pages
+import UserLogin from './pages/User/UserLogin';
+import UserSignup from './pages/User/UserSignup';
+import Home from './pages/Home';
 
-import AdminLayout   from './components/Admin/AdminLayout.jsx'
-//import AdminLogin    from './pages/Admin/AdminLogin.jsx'
-import AdminDashboard from './pages/Admin/DashBoard.jsx'
-import Products      from './pages/Admin/Products.jsx'
-import Orders        from './pages/Admin/Orders.jsx'
-import User          from './pages/Admin/Users.jsx'
+// Admin pages
+import AdminDashboard from './pages/Admin/DashBoard';
+import Orders from './pages/Admin/Orders';
+import Products from './pages/Admin/Products';
+import Users from './pages/Admin/Users';
 
-const App = () => (
-  <Routes>
-    {/* public user routes */}
-    <Route path="/"         element={<Home/>} />
-    <Route path="/userlogin"   element={<UserLogin/>} />
-    <Route path="/usersignup"  element={<UserSignup/>} />
+// Admin layout components
+import AdminLayout from './components/Admin/AdminLayout';
 
-    {/* admin login (public) */}
-    {/* <Route path="/admin/login" element={<AdminLogin/>} /> */}
+function App() {
+  return (
+    <UserProvider>
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-    {/* all /admin/* routes share the layout */}
-    <Route path="/admin" element={<AdminLayout/>}>
-      {/* redirect /admin → /admin/dashboard */}
-      <Route index element={<Navigate to="dashboard" replace />} />
+        <Route element={<PublicOnlyRoute />}>
+          <Route path="/login" element={<UserLogin />} />
+          <Route path="/signup" element={<UserSignup />} />
+        </Route>
 
-      <Route path="dashboard" element={<AdminDashboard/>} />
-      <Route path="products"  element={<Products/>}      />
-      <Route path="orders"    element={<Orders/>}        />
-      <Route path="users"     element={<User/>}          />
-    </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<div>Dashboard (to be implemented)</div>} />
+          <Route path="/profile" element={<div>User Profile (to be implemented)</div>} />
+        </Route>
 
-    {/* fallback */}
-    <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes>
-)
+        <Route element={<ProtectedRoute adminOnly />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="products" element={<Products />} />
+            <Route path="users" element={<Users />} />
+          </Route>
+        </Route>
 
-export default App
+        <Route path="*" element={<div>Page not found</div>} />
+      </Routes>
+    </UserProvider>
+  );
+}
+
+export default App;
