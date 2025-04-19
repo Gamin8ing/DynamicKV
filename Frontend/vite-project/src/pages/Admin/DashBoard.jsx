@@ -1,3 +1,4 @@
+// src/pages/Admin/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react'
 import {
   TrendingUp,
@@ -17,35 +18,47 @@ import API from '../../utils/api'
 
 const AdminDashboard = () => {
   // States
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalOrders: 0,
-    totalRevenue: 0,
-    userGrowth: '0%',
-    orderGrowth: '0%',
-    revenueGrowth: '0%',
-  })
+  const [stats, setStats] = useState(null)
   const [salesData, setSalesData] = useState([])
   const [months, setMonths] = useState([])
+  const [recentOrders, setRecentOrders] = useState([])
+  const [topProducts, setTopProducts] = useState([])
   const [selectedPeriod, setSelectedPeriod] = useState('7')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Fetch stats & sales on mount and when period changes
   useEffect(() => {
-    Promise.all([
-      API.get('/admin/stats'),
-      API.get(`/admin/sales?period=${selectedPeriod}`)
-    ])
-      .then(([statsRes, salesRes]) => {
-        setStats(statsRes.data)
+    setLoading(true)
+    setError(null)
+
+    // 1) Stats & Sales
+    const statsReq = API.get('/admin/stats')
+    const salesReq = API.get(`/admin/sales?period=${selectedPeriod}`)
+    // 2) Recent Orders
+    const ordersReq = API.get('/admin/recent-orders')
+    // 3) Top Products
+    const topProdReq = API.get('/admin/top-products')
+
+    Promise.all([statsReq, salesReq, ordersReq, topProdReq])
+      .then(([sRes, salesRes, ordRes, prodRes]) => {
+        setStats(sRes.data)
         setMonths(salesRes.data.labels)
         setSalesData(salesRes.data.values)
+        setRecentOrders(ordRes.data)
+        setTopProducts(prodRes.data)
       })
-      .catch(err => console.error('Dashboard data error', err))
+      .catch(err => {
+        console.error(err)
+        setError('Data load mein problem aayi')
+      })
+      .finally(() => setLoading(false))
   }, [selectedPeriod])
 
-  // Prepare data for Recharts
-  const chartData = months.map((month, idx) => ({ month, value: salesData[idx] || 0 }))
+  if (loading) return <p className="p-6">Loading dashboard...</p>
+  if (error)   return <p className="p-6 text-red-500">{error}</p>
 
+  // Prepare chart data
+  const chartData = months.map((m, i) => ({ month: m, value: salesData[i] || 0 }))
   // Stat cards config
   const statCards = [
     {
@@ -85,14 +98,7 @@ const AdminDashboard = () => {
         </div>
         <div className="text-2xl font-bold text-gray-800">{value}</div>
         <div className={`flex items-center text-xs mt-2 ${changeColor}`}>
-          {change.startsWith('+') ? (
-            <TrendingUp size={14} />
-          ) : (
-            <TrendingUp
-              size={14}
-              style={{ transform: 'rotate(180deg)' }}
-            />
-          )}
+          <TrendingUp size={14} className={change.startsWith('+') ? '' : 'transform rotate-180'} />
           <span className="ml-1">{change}</span>
         </div>
       </div>
@@ -103,17 +109,13 @@ const AdminDashboard = () => {
     <div className="p-6">
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {statCards.map((card, idx) => (
-          <StatCard key={idx} {...card} />
-        ))}
+        {statCards.map((c, i) => <StatCard key={i} {...c} />)}
       </div>
 
-      {/* Sales Overview with Recharts */}
+      {/* Sales Overview */}
       <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold text-gray-800">
-            Sales Overview
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-800">Sales Overview</h2>
           <select
             value={selectedPeriod}
             onChange={e => setSelectedPeriod(e.target.value)}
@@ -126,10 +128,7 @@ const AdminDashboard = () => {
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-            >
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
@@ -139,7 +138,68 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* You can add Recent Orders & Top Products sections similarly */}
+      {/* Recent Orders */}
+      <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Orders</h2>
+        {recentOrders.length === 0
+          ? <p className="text-gray-500">No recent orders.</p>
+          : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b">
+                    <th className="pb-2">Order ID</th>
+                    <th className="pb-2">Customer</th>
+                    <th className="pb-2">Status</th>
+                    <th className="pb-2">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentOrders.map(o => (
+                    <tr key={o.id} className="border-b hover:bg-gray-50">
+                      <td className="py-2">{o.id}</td>
+                      <td>{o.customer}</td>
+                      <td>{o.status}</td>
+                      <td>${o.amount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
+      </div>
+
+      {/* Top Products */}
+      <div className="bg-white p-6 rounded-xl shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Top Products</h2>
+        {topProducts.length === 0
+          ? <p className="text-gray-500">No data.</p>
+          : (
+            <div className="space-y-4">
+              {topProducts.map(p => (
+                <div key={p.id} className="flex items-center">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                    <img src={p.image} alt={p.name} className="w-8 h-8 object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium">{p.name}</h4>
+                    <div className="h-2 bg-gray-200 rounded-full mt-1">
+                      <div
+                        className="h-2 rounded-full"
+                        style={{ backgroundColor: '#63D2FF', width: `${p.percent}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-gray-600 ml-4">
+                    {p.percent}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          )
+        }
+      </div>
     </div>
   )
 }
