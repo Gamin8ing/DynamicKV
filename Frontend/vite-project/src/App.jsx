@@ -34,7 +34,7 @@ const App = () => (
       {/* <Route path="/admin/login" element={<AdminLogin/>} /> */}
 
       {/* all /admin/* routes share the layout */}
-      <Route element={<ProtectedRoute />}>
+      
         <Route path="/admin" element={<AdminLayout />}>
           {/* redirect /admin → /admin/dashboard */}
           <Route index element={<Navigate to="dashboard" replace />} />
@@ -48,7 +48,7 @@ const App = () => (
           <Route path="notifications" element={<Notifications />} />
 
         </Route>
-      </Route>
+      
 
       {/* fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

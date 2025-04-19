@@ -6,10 +6,10 @@ import {
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import API from '../../utils/api'
-import { UserDataContext } from '../../context/userContext'
+import { AdminDataContext } from '../../context/AdminContext'
 
 const AdminHeader = () => {
-  const { user, logout } = useContext(UserDataContext)  // user context se naam/email
+  const { user, logout } = useContext(AdminDataContext)  // user context se naam/email
   const navigate = useNavigate()
 
   // dropdown state
