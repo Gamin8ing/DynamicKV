@@ -4,7 +4,10 @@ import {
   TrendingUp,
   Users,
   ShoppingCart,
-  DollarSign
+  DollarSign,
+  Calendar,
+  ChevronRight,
+  Package
 } from 'lucide-react'
 import {
   BarChart,
@@ -12,7 +15,8 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  CartesianGrid
 } from 'recharts'
 import API from '../../utils/api'
 
@@ -54,11 +58,40 @@ const AdminDashboard = () => {
       .finally(() => setLoading(false))
   }, [selectedPeriod])
 
-  if (loading) return <p className="p-6">Loading dashboard...</p>
-  if (error)   return <p className="p-6 text-red-500">{error}</p>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading dashboard data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <div className="bg-red-50 text-red-600 p-6 rounded-lg max-w-md text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <h3 className="font-semibold text-lg mb-2">Error Loading Dashboard</h3>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Prepare chart data
   const chartData = months.map((m, i) => ({ month: m, value: salesData[i] || 0 }))
+  
   // Stat cards config
   const statCards = [
     {
@@ -66,139 +99,258 @@ const AdminDashboard = () => {
       value: stats.totalUsers,
       icon: <Users size={24} />,
       change: stats.userGrowth,
-      color: '#63D2FF'
+      color: 'blue'
     },
     {
       title: 'Orders',
       value: stats.totalOrders,
       icon: <ShoppingCart size={24} />,
       change: stats.orderGrowth,
-      color: '#72D3D5'
+      color: 'green'
     },
     {
       title: 'Revenue',
       value: `$${stats.totalRevenue}`,
       icon: <DollarSign size={24} />,
       change: stats.revenueGrowth,
-      color: '#BED8D4'
+      color: 'purple'
     }
   ]
 
   // StatCard component
   const StatCard = ({ title, value, icon, change, color }) => {
-    const changeColor = change.startsWith('+') ? 'text-green-500' : 'text-red-500'
+    const isPositive = change.startsWith('+')
+    const changeColor = isPositive ? 'text-green-600' : 'text-red-600'
+    
+    // Color mapping
+    const colorStyles = {
+      blue: {
+        bg: 'bg-blue-50',
+        text: 'text-blue-600',
+        icon: 'bg-blue-100'
+      },
+      green: {
+        bg: 'bg-green-50',
+        text: 'text-green-600',
+        icon: 'bg-green-100'
+      },
+      purple: {
+        bg: 'bg-purple-50',
+        text: 'text-purple-600',
+        icon: 'bg-purple-100'
+      }
+    }
+
+    const style = colorStyles[color]
+
     return (
-      <div
-        className="bg-white rounded-xl shadow-sm p-6 border-l-4"
-        style={{ borderColor: color }}
-      >
+      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
         <div className="flex justify-between items-center mb-4">
-          <div className="text-sm font-medium text-gray-500">{title}</div>
-          {icon}
-        </div>
-        <div className="text-2xl font-bold text-gray-800">{value}</div>
-        <div className={`flex items-center text-xs mt-2 ${changeColor}`}>
-          <TrendingUp size={14} className={change.startsWith('+') ? '' : 'transform rotate-180'} />
-          <span className="ml-1">{change}</span>
+          <div className="flex items-center">
+            <div className={`w-10 h-10 rounded-lg ${style.icon} flex items-center justify-center mr-3`}>
+              <span className={style.text}>{icon}</span>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-500">{title}</div>
+              <div className="text-2xl font-bold text-gray-800 mt-1">{value}</div>
+            </div>
+          </div>
+          <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${isPositive ? 'bg-green-100' : 'bg-red-100'} ${changeColor}`}>
+            <TrendingUp 
+              size={14} 
+              className={isPositive ? '' : 'transform rotate-180'} 
+            />
+            <span className="ml-1">{change}</span>
+          </div>
         </div>
       </div>
     )
   }
 
+  // Order status badge
+  const StatusBadge = ({ status }) => {
+    const statusStyles = {
+      'completed': 'bg-green-100 text-green-800',
+      'processing': 'bg-blue-100 text-blue-800',
+      'pending': 'bg-yellow-100 text-yellow-800',
+      'cancelled': 'bg-red-100 text-red-800'
+    }
+
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status.toLowerCase()] || 'bg-gray-100 text-gray-800'}`}>
+        {status}
+      </span>
+    )
+  }
+
   return (
-    <div className="p-6">
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {statCards.map((c, i) => <StatCard key={i} {...c} />)}
-      </div>
-
-      {/* Sales Overview */}
-      <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold text-gray-800">Sales Overview</h2>
-          <select
-            value={selectedPeriod}
-            onChange={e => setSelectedPeriod(e.target.value)}
-            className="text-sm border rounded-md px-3 py-1 text-gray-600"
-          >
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 3 months</option>
-          </select>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-500 mt-1">Welcome back, here's what's happening today.</p>
         </div>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#63D2FF" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
 
-      {/* Recent Orders */}
-      <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Orders</h2>
-        {recentOrders.length === 0
-          ? <p className="text-gray-500">No recent orders.</p>
-          : (
+        {/* Time Period Selector */}
+        <div className="mb-6 flex justify-between items-center">
+          <div className="flex items-center text-sm text-gray-500">
+            <Calendar size={16} className="mr-2" />
+            <span>Quick filter:</span>
+          </div>
+          <div className="flex space-x-2">
+            {['7', '30', '90'].map((period) => (
+              <button
+                key={period}
+                onClick={() => setSelectedPeriod(period)}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                  selectedPeriod === period
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {period === '7' ? 'Last 7 days' : period === '30' ? 'Last 30 days' : 'Last 3 months'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {statCards.map((c, i) => <StatCard key={i} {...c} />)}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Sales Overview */}
+          <div className="bg-white p-6 rounded-lg shadow-sm lg:col-span-2 border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold text-gray-800">Sales Overview</h2>
+            </div>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(236, 242, 255, 0.4)' }}
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' 
+                    }}
+                  />
+                  <Bar 
+                    dataKey="value" 
+                    fill="#3B82F6" 
+                    radius={[4, 4, 0, 0]} 
+                    barSize={40}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Top Products */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold text-gray-800">Top Products</h2>
+              <button className="text-blue-600 text-sm font-medium hover:text-blue-800 flex items-center">
+                View All <ChevronRight size={16} />
+              </button>
+            </div>
+            {topProducts.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <Package size={24} className="text-gray-400" />
+                </div>
+                <p className="text-gray-500">No product data available</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {topProducts.map(p => (
+                  <div key={p.id} className="flex items-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-4 overflow-hidden border border-gray-200">
+                      <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h4 className="text-sm font-medium">{p.name}</h4>
+                        <span className="text-xs font-medium text-gray-600">
+                          {p.percent}%
+                        </span>
+                      </div>
+                      <div className="h-2 bg-gray-100 rounded-full mt-2">
+                        <div
+                          className="h-2 rounded-full bg-blue-500"
+                          style={{ width: `${p.percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Orders */}
+        <div className="bg-white p-6 rounded-lg shadow-sm mt-6 border border-gray-100">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold text-gray-800">Recent Orders</h2>
+            <button className="text-blue-600 text-sm font-medium hover:text-blue-800 flex items-center">
+              View All <ChevronRight size={16} />
+            </button>
+          </div>
+          {recentOrders.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <ShoppingCart size={24} className="text-gray-400" />
+              </div>
+              <p className="text-gray-500">No recent orders.</p>
+            </div>
+          ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-gray-500 border-b">
-                    <th className="pb-2">Order ID</th>
-                    <th className="pb-2">Customer</th>
-                    <th className="pb-2">Status</th>
-                    <th className="pb-2">Amount</th>
+                    <th className="pb-3 font-medium">Order ID</th>
+                    <th className="pb-3 font-medium">Customer</th>
+                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 font-medium">Amount</th>
+                    <th className="pb-3 font-medium text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentOrders.map(o => (
                     <tr key={o.id} className="border-b hover:bg-gray-50">
-                      <td className="py-2">{o.id}</td>
-                      <td>{o.customer}</td>
-                      <td>{o.status}</td>
-                      <td>${o.amount}</td>
+                      <td className="py-3 font-medium">#{o.id}</td>
+                      <td className="py-3">{o.customer}</td>
+                      <td className="py-3">
+                        <StatusBadge status={o.status} />
+                      </td>
+                      <td className="py-3 font-medium">${o.amount}</td>
+                      <td className="py-3 text-right">
+                        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                          Details
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )
-        }
-      </div>
-
-      {/* Top Products */}
-      <div className="bg-white p-6 rounded-xl shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Top Products</h2>
-        {topProducts.length === 0
-          ? <p className="text-gray-500">No data.</p>
-          : (
-            <div className="space-y-4">
-              {topProducts.map(p => (
-                <div key={p.id} className="flex items-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
-                    <img src={p.image} alt={p.name} className="w-8 h-8 object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium">{p.name}</h4>
-                    <div className="h-2 bg-gray-200 rounded-full mt-1">
-                      <div
-                        className="h-2 rounded-full"
-                        style={{ backgroundColor: '#63D2FF', width: `${p.percent}%` }}
-                      />
-                    </div>
-                  </div>
-                  <span className="text-xs font-medium text-gray-600 ml-4">
-                    {p.percent}%
-                  </span>
-                </div>
-              ))}
-            </div>
-          )
-        }
+          )}
+        </div>
       </div>
     </div>
   )
