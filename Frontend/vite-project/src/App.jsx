@@ -1,54 +1,59 @@
 // src/App.jsx
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { UserProvider } from './context/UserContext';
+import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 
-import Home            from './pages/Home.jsx'
-import UserLogin       from './pages/User/UserLogin.jsx'
-import UserSignup      from './pages/User/UserSignup.jsx'
+import Home from './pages/Home.jsx'
+import UserLogin from './pages/User/UserLogin.jsx'
+import UserSignup from './pages/User/UserSignup.jsx'
 
-import AdminLayout     from './components/Admin/AdminLayout.jsx'
-import AdminLogin      from './pages/User/UserLogin.jsx'
-import AdminDashboard  from './pages/Admin/DashBoard.jsx'
-import Products        from './pages/Admin/Products.jsx'
-import Orders          from './pages/Admin/Orders.jsx'
-import Users           from './pages/Admin/Users.jsx'
-import Profile         from './pages/Admin/Profile.jsx'
-import Settings        from './pages/Admin/Settings.jsx'
+import AdminLayout from './components/Admin/AdminLayout.jsx'
+//import AdminLogin    from './pages/Admin/AdminLogin.jsx'
+import AdminDashboard from './pages/Admin/DashBoard.jsx'
+import Products from './pages/Admin/Products.jsx'
+import Orders from './pages/Admin/Orders.jsx'
+import User from './pages/Admin/Users.jsx'
+import Profile from './pages/Admin/Profile.jsx'
+import Settings from './pages/Admin/Settings.jsx'
 import Notifications from './pages/Admin/Notifications.jsx'
 
+
 const App = () => (
-  <Routes>
-    {/* Public user routes */}
-    <Route path="/"          element={<Home />} />
-    <Route path="/userlogin" element={<UserLogin />} />
-    <Route path="/usersignup" element={<UserSignup />} />
+  <UserProvider>
+    <Routes>
+      {/* public user routes */}
+      <Route path="/" element={<Home />} />
 
-    {/* Admin login (public) */}
-    <Route path="/admin/login" element={<AdminLogin />} />
+      <Route element={<PublicOnlyRoute />}>
+        <Route path="/login" element={<UserLogin />} />
+        <Route path="/signup" element={<UserSignup />} />
+      </Route>
 
-    {/* All /admin/* routes share the layout */}
-    <Route path="/admin" element={<AdminLayout />}>
-      {/* Redirect /admin → /admin/dashboard */}
-      <Route index element={<Navigate to="dashboard" replace />} />
+      {/* admin login (public) */}
+      {/* <Route path="/admin/login" element={<AdminLogin/>} /> */}
 
-      <Route path="dashboard" element={<AdminDashboard />} />
-      <Route path="products"  element={<Products />} />
-      <Route path="orders"    element={<Orders />} />
-      <Route path="users"     element={<Users />} />
-      <Route path="profile"   element={<Profile />} />
-      <Route path="settings"  element={<Settings />} />
-      <Route path="notifications" element={<Notifications />} />
+      {/* all /admin/* routes share the layout */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          {/* redirect /admin → /admin/dashboard */}
+          <Route index element={<Navigate to="dashboard" replace />} />
 
-      {/* Redirect /admin/logout to /admin/login */}
-      <Route
-        path="logout"
-        element={<Navigate to="/admin/login" replace />}
-      />
-    </Route>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="products" element={<Products />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="users" element={<User />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="notifications" element={<Notifications />} />
 
-    {/* Fallback to home */}
-    <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes>
+        </Route>
+      </Route>
+
+      {/* fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  </UserProvider>
 )
 
-export default App
+export default App;
