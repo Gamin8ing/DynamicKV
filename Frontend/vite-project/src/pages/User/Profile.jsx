@@ -1,235 +1,181 @@
-import React, { useState } from 'react';
-import { User, LogOut, Mail, Phone, MapPin, CreditCard, Shield, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingBag, User, ChevronUp, Bell, Moon, Sun, MapPin, Phone, Mail, Compass, Settings, LogOut, Heart } from 'lucide-react';
+import { useUser } from '../../context/UserContext';
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState('details');
-  
-  // Mock user data - in a real app, this would come from your auth context
-  const userData = {
-    name: "Alex Johnson",
-    email: "alex.johnson@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Main Street, Anytown, AN 12345",
-    joinDate: "January 2023"
+  const { user, logout } = useUser();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showFooter, setShowFooter] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
+  const navigate = useNavigate();
+
+  // Handle scroll to show/hide footer and scroll button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+      setShowFooter(window.scrollY > 500);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
   };
 
   const handleLogout = () => {
-    // In a real app, this would call your logout function from auth context
-    console.log("Logging out...");
-    // Then redirect to login page
+    logout();
+    navigate('/login'); // Redirect to login page after logout
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 pb-20">
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-blue-50 to-teal-50'}`}>
       {/* Top navigation bar */}
-      <header className="bg-white bg-opacity-70 backdrop-blur-md p-4 border-b border-gray-100 sticky top-0 z-10">
+      <header className={`${isDarkMode ? 'bg-gray-800 bg-opacity-80 backdrop-blur-md border-gray-700' : 'bg-white bg-opacity-70 backdrop-blur-md border-gray-100'} p-4 border-b sticky top-0 z-10`}>
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-cyan-400 to-blue-400 flex items-center justify-center text-white font-bold">
-                KV
-              </div>
-              <h1 className="text-xl font-medium text-gray-800">Dynamic KV</h1>
-            </Link>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-cyan-400 to-blue-400 flex items-center justify-center text-white font-bold">
+              KV
+            </div>
+            <h1 className={`text-xl font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'} tracking-tight`}>Dynamic KV</h1>
           </div>
-          
           <div className="flex items-center space-x-4">
-            <Link to="/" className="flex items-center text-gray-600 hover:text-cyan-600">
-              <ArrowLeft size={18} className="mr-1" />
-              <span>Back</span>
-            </Link>
+            <button
+              className={`p-2 ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={toggleDarkMode}
+            >
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <User size={18} className="text-blue-600" />
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
-        <div className="mb-8">
-          <h2 className="text-3xl font-medium text-gray-800">Your Profile</h2>
-          <p className="text-gray-500">Manage your account settings and preferences</p>
-        </div>
-
-        <div className="bg-white bg-opacity-60 backdrop-blur-md rounded-xl overflow-hidden shadow-md border border-white/20">
-          <div className="p-8 border-b border-gray-100 flex items-center">
-            <div className="h-20 w-20 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full flex items-center justify-center text-white text-3xl font-medium">
-              {userData.name.split(' ').map(name => name[0]).join('')}
-            </div>
-            <div className="ml-6">
-              <h3 className="text-2xl font-medium text-gray-800">{userData.name}</h3>
-              <p className="text-gray-500">Member since {userData.joinDate}</p>
+      <main className="container mx-auto px-4 py-6 pb-24">
+        <div className={`max-w-2xl mx-auto ${isDarkMode ? 'bg-gray-800 bg-opacity-60' : 'bg-white bg-opacity-60'} backdrop-blur-md rounded-xl shadow-lg overflow-hidden`}>
+          <div className={`p-6 ${isDarkMode ? 'bg-gray-700 bg-opacity-30' : 'bg-blue-50 bg-opacity-30'}`}>
+            <div className="text-center mb-4">
+              <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-r from-cyan-400 to-blue-400 flex items-center justify-center text-white text-2xl font-bold">
+                {user?.name?.[0] || 'U'}
+              </div>
+              <h2 className={`text-2xl font-bold mt-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{user?.name || 'Guest User'}</h2>
+              <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>{user?.email || 'guest@example.com'}</p>
             </div>
           </div>
 
-          <div className="flex border-b border-gray-100">
-            <button 
-              className={`px-6 py-4 font-medium ${activeTab === 'details' ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500'}`}
-              onClick={() => setActiveTab('details')}
+          <div className="p-6 space-y-6">
+            <div className={`rounded-lg overflow-hidden ${isDarkMode ? 'bg-gray-700 bg-opacity-50' : 'bg-gray-50'}`}>
+              <Link to="/orders">
+                <div className={`flex items-center p-4 ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'} transition-colors`}>
+                  <ShoppingBag size={20} className="mr-3 text-cyan-500" />
+                  <div className="flex-1">
+                    <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>My Orders</h3>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>View your order history</p>
+                  </div>
+                  <span className="text-cyan-500">→</span>
+                </div>
+              </Link>
+
+              <Link to="/wishlist">
+                <div className={`flex items-center p-4 border-t ${isDarkMode ? 'border-gray-600 hover:bg-gray-600' : 'border-gray-200 hover:bg-gray-100'} transition-colors`}>
+                  <Heart size={20} className="mr-3 text-cyan-500" />
+                  <div className="flex-1">
+                    <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>My Wishlist</h3>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Products you've saved</p>
+                  </div>
+                  <span className="text-cyan-500">→</span>
+                </div>
+              </Link>
+
+              <Link to="/settings">
+                <div className={`flex items-center p-4 border-t ${isDarkMode ? 'border-gray-600 hover:bg-gray-600' : 'border-gray-200 hover:bg-gray-100'} transition-colors`}>
+                  <Settings size={20} className="mr-3 text-cyan-500" />
+                  <div className="flex-1">
+                    <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Account Settings</h3>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Manage your profile</p>
+                  </div>
+                  <span className="text-cyan-500">→</span>
+                </div>
+              </Link>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-colors"
             >
-              Account Details
-            </button>
-            <button 
-              className={`px-6 py-4 font-medium ${activeTab === 'security' ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500'}`}
-              onClick={() => setActiveTab('security')}
-            >
-              Security
-            </button>
-            <button 
-              className={`px-6 py-4 font-medium ${activeTab === 'payment' ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500'}`}
-              onClick={() => setActiveTab('payment')}
-            >
-              Payment Methods
+              <LogOut size={18} className="mr-2" />
+              Logout
             </button>
           </div>
-
-          <div className="p-6">
-            {activeTab === 'details' && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Full Name</label>
-                    <div className="flex items-center border border-gray-200 rounded-lg p-3 bg-white">
-                      <User size={18} className="text-gray-400 mr-2" />
-                      <span>{userData.name}</span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Email Address</label>
-                    <div className="flex items-center border border-gray-200 rounded-lg p-3 bg-white">
-                      <Mail size={18} className="text-gray-400 mr-2" />
-                      <span>{userData.email}</span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Phone Number</label>
-                    <div className="flex items-center border border-gray-200 rounded-lg p-3 bg-white">
-                      <Phone size={18} className="text-gray-400 mr-2" />
-                      <span>{userData.phone}</span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
-                    <div className="flex items-center border border-gray-200 rounded-lg p-3 bg-white">
-                      <MapPin size={18} className="text-gray-400 mr-2" />
-                      <span>{userData.address}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end pt-4">
-                  <button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg font-medium">
-                    Edit Profile
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {activeTab === 'security' && (
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-lg font-medium text-gray-800 mb-4">Password Settings</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">Current Password</label>
-                      <input 
-                        type="password" 
-                        className="w-full border border-gray-200 rounded-lg p-3 bg-white"
-                        placeholder="••••••••••"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">New Password</label>
-                      <input 
-                        type="password" 
-                        className="w-full border border-gray-200 rounded-lg p-3 bg-white"
-                        placeholder="••••••••••"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">Confirm New Password</label>
-                      <input 
-                        type="password" 
-                        className="w-full border border-gray-200 rounded-lg p-3 bg-white"
-                        placeholder="••••••••••"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end pt-4">
-                    <button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg font-medium">
-                      Update Password
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="pt-6 border-t border-gray-100">
-                  <h4 className="text-lg font-medium text-gray-800 mb-4">Account Security</h4>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center">
-                        <Shield size={20} className="text-gray-400 mr-3" />
-                        <div>
-                          <h5 className="font-medium text-gray-800">Two-Factor Authentication</h5>
-                          <p className="text-sm text-gray-500">Add an extra layer of security to your account</p>
-                        </div>
-                      </div>
-                      <button className="px-4 py-2 border border-cyan-500 text-cyan-500 hover:bg-cyan-50 rounded-lg font-medium">
-                        Enable
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {activeTab === 'payment' && (
-              <div className="space-y-6">
-                <h4 className="text-lg font-medium text-gray-800 mb-4">Saved Payment Methods</h4>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                    <div className="flex items-center">
-                      <CreditCard size={20} className="text-gray-400 mr-3" />
-                      <div>
-                        <h5 className="font-medium text-gray-800">•••• •••• •••• 4242</h5>
-                        <p className="text-sm text-gray-500">Expires 12/26</p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button className="px-3 py-1 border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg font-medium text-sm">
-                        Edit
-                      </button>
-                      <button className="px-3 py-1 border border-red-300 text-red-500 hover:bg-red-50 rounded-lg font-medium text-sm">
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end pt-4">
-                  <button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg font-medium">
-                    Add Payment Method
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-8 text-center">
-          <button 
-            onClick={handleLogout}
-            className="inline-flex items-center px-6 py-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg font-medium"
-          >
-            <LogOut size={18} className="mr-2" />
-            Logout
-          </button>
         </div>
       </main>
+
+      {showFooter && (
+        <footer className={`${isDarkMode ? "bg-gray-900 text-white border-gray-800" : "bg-gray-900 text-white"} py-6 px-4 border-t fixed bottom-0 left-0 right-0 z-10 transform transition-transform duration-300 ease-in-out translate-y-0`}>
+          <div className="container mx-auto text-center">
+            <h4 className="font-medium mb-4">Contact Us</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
+              <li className="flex justify-center items-center"><MapPin size={16} className="mr-2 text-cyan-400" /><span>123 Commerce St, Business City</span></li>
+              <li className="flex justify-center items-center"><Phone size={16} className="mr-2 text-cyan-400" /><span>+1 (555) 123-4567</span></li>
+              <li className="flex justify-center items-center"><Mail size={16} className="mr-2 text-cyan-400" /><span>support@dynamickv.com</span></li>
+            </ul>
+            <p className="mt-4 text-xs text-gray-500">© {new Date().getFullYear()} Dynamic KV. All rights reserved.</p>
+          </div>
+        </footer>
+      )}
+
+      <div className={`fixed bottom-0 left-0 right-0 ${isDarkMode ? 'bg-gray-800 bg-opacity-80 border-gray-700' : 'bg-white bg-opacity-80 border-gray-200'} backdrop-blur-md border-t py-2 px-6 z-20`}>
+        <div className="flex justify-between max-w-md mx-auto">
+          <Link to="/">
+            <button
+              className={`flex flex-col items-center p-2 ${activeTab === 'home' ? 'text-cyan-600' : isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('home')}
+            >
+              <Compass size={20} />
+              <span className="text-xs mt-1">Home</span>
+            </button>
+          </Link>
+          <Link to="/orders">
+            <button
+              className={`flex flex-col items-center p-2 ${activeTab === 'orders' ? 'text-cyan-600' : isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('orders')}
+            >
+              <ShoppingBag size={20} />
+              <span className="text-xs mt-1">Orders</span>
+            </button>
+          </Link>
+          <Link to="/profile">
+            <button
+              className={`flex flex-col items-center p-2 ${activeTab === 'profile' ? 'text-cyan-600' : isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('profile')}
+            >
+              <User size={20} />
+              <span className="text-xs mt-1">Profile</span>
+            </button>
+          </Link>
+        </div>
+      </div>
+
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-20 right-6 p-3 rounded-full shadow-lg z-30
+            ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white hover:bg-gray-100 text-gray-800'}`}
+        >
+          <ChevronUp size={20} />
+        </button>
+      )}
     </div>
   );
 };

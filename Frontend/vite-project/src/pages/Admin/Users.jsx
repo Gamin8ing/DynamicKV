@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users as UsersIcon, Plus, Edit, Trash2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Users as UsersIcon, Plus, Edit, Trash2, AlertCircle, RefreshCw, X } from 'lucide-react';
 import API from '../../utils/api';
 
 const RoleIndicator = ({ role }) => {
@@ -72,11 +72,193 @@ const UserRow = ({ user, onEdit, onDelete }) => {
   );
 };
 
+// New AddUserModal component
+const AddUserModal = ({ isOpen, onClose, onAddUser }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'user',
+    password: '',
+    confirmPassword: ''
+  });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.password) {
+      setError('All fields are required');
+      return;
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      const response = await API.post('/admin/users', formData);
+      onAddUser(response.data);
+      onClose();
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        role: 'user',
+        password: '',
+        confirmPassword: ''
+      });
+    } catch (err) {
+      console.error('Error adding user:', err);
+      setError(err.response?.data?.message || 'Failed to add user. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Add New User</h2>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        {error && (
+          <div className="p-3 mb-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="John Doe"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="john@example.com"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                Role
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="user">User</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          
+          <div className="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 flex items-center"
+            >
+              {isSubmitting && (
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+              Save User
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -98,8 +280,11 @@ const Users = () => {
   }, []);
 
   const handleAddUser = () => {
-    // Implement navigation to add user page or open modal
-    console.log('Add user clicked');
+    setIsAddModalOpen(true);
+  };
+
+  const handleUserAdded = (newUser) => {
+    setUsers(prevUsers => [...prevUsers, newUser]);
   };
 
   const handleEditUser = (user) => {
@@ -199,6 +384,12 @@ const Users = () => {
           </div>
         )}
       </div>
+      
+      <AddUserModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)}
+        onAddUser={handleUserAdded}
+      />
     </div>
   );
 };
