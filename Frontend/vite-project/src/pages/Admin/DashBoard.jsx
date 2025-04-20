@@ -7,7 +7,9 @@ import {
   DollarSign,
   Calendar,
   ChevronRight,
-  Package
+  Package,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react'
 import {
   BarChart,
@@ -16,7 +18,9 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid
+  CartesianGrid,
+  LineChart,
+  Line
 } from 'recharts'
 import API from '../../utils/api'
 
@@ -30,6 +34,30 @@ const AdminDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('7')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [historicalData, setHistoricalData] = useState({
+    users: [],
+    orders: [],
+    revenue: []
+  })
+  const [availablePeriods, setAvailablePeriods] = useState([
+    { value: '7', label: 'Last 7 days' },
+    { value: '30', label: 'Last 30 days' },
+    { value: '90', label: 'Last 3 months' },
+    { value: '180', label: 'Last 6 months' },
+    { value: '365', label: 'Last year' }
+  ])
+
+  const calculateTrends = (data) => {
+    if (!data || data.length < 2) return '0%';
+    
+    const current = data[data.length - 1];
+    const previous = data[data.length - 2];
+    
+    if (previous === 0) return current > 0 ? '+100%' : '0%';
+    
+    const percentChange = ((current - previous) / previous) * 100;
+    return (percentChange >= 0 ? '+' : '') + percentChange.toFixed(1) + '%';
+  };
 
   useEffect(() => {
     setLoading(true)
@@ -42,14 +70,34 @@ const AdminDashboard = () => {
     const ordersReq = API.get('/admin/recent-orders')
     // 3) Top Products
     const topProdReq = API.get('/admin/top-products')
+    // 4) Historical Data for trends
+    const historicalReq = API.get(`/admin/historical?period=${selectedPeriod}`)
 
-    Promise.all([statsReq, salesReq, ordersReq, topProdReq])
-      .then(([sRes, salesRes, ordRes, prodRes]) => {
+    Promise.all([statsReq, salesReq, ordersReq, topProdReq, historicalReq])
+      .then(([sRes, salesRes, ordRes, prodRes, histRes]) => {
         setStats(sRes.data)
         setMonths(salesRes.data.labels)
         setSalesData(salesRes.data.values)
         setRecentOrders(ordRes.data)
         setTopProducts(prodRes.data)
+        
+        // Set historical data
+        setHistoricalData(histRes.data)
+        
+        // Calculate trends based on historical data
+        if (histRes.data) {
+          const userTrend = calculateTrends(histRes.data.users);
+          const orderTrend = calculateTrends(histRes.data.orders);
+          const revenueTrend = calculateTrends(histRes.data.revenue);
+          
+          // Update stats with calculated trends
+          setStats(prev => ({
+            ...prev,
+            userGrowth: userTrend,
+            orderGrowth: orderTrend,
+            revenueGrowth: revenueTrend
+          }));
+        }
       })
       .catch(err => {
         console.error(err)
@@ -57,6 +105,11 @@ const AdminDashboard = () => {
       })
       .finally(() => setLoading(false))
   }, [selectedPeriod])
+
+  // Handle period change
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+  }
 
   if (loading) {
     return (
@@ -99,27 +152,30 @@ const AdminDashboard = () => {
       value: stats.totalUsers,
       icon: <Users size={24} />,
       change: stats.userGrowth,
-      color: 'blue'
+      color: 'blue',
+      data: historicalData.users
     },
     {
       title: 'Orders',
       value: stats.totalOrders,
       icon: <ShoppingCart size={24} />,
       change: stats.orderGrowth,
-      color: 'green'
+      color: 'green',
+      data: historicalData.orders
     },
     {
       title: 'Revenue',
       value: `$${stats.totalRevenue}`,
       icon: <DollarSign size={24} />,
       change: stats.revenueGrowth,
-      color: 'purple'
+      color: 'purple',
+      data: historicalData.revenue
     }
   ]
 
   // StatCard component
-  const StatCard = ({ title, value, icon, change, color }) => {
-    const isPositive = change.startsWith('+')
+  const StatCard = ({ title, value, icon, change, color, data }) => {
+    const isPositive = change && change.startsWith('+')
     const changeColor = isPositive ? 'text-green-600' : 'text-red-600'
     
     // Color mapping
@@ -127,21 +183,30 @@ const AdminDashboard = () => {
       blue: {
         bg: 'bg-blue-50',
         text: 'text-blue-600',
-        icon: 'bg-blue-100'
+        icon: 'bg-blue-100',
+        line: '#3B82F6'
       },
       green: {
         bg: 'bg-green-50',
         text: 'text-green-600',
-        icon: 'bg-green-100'
+        icon: 'bg-green-100',
+        line: '#10B981'
       },
       purple: {
         bg: 'bg-purple-50',
         text: 'text-purple-600',
-        icon: 'bg-purple-100'
+        icon: 'bg-purple-100',
+        line: '#8B5CF6'
       }
     }
 
     const style = colorStyles[color]
+    
+    // Prepare mini chart data
+    const miniChartData = data ? data.map((value, index) => ({
+      value,
+      index
+    })) : [];
 
     return (
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
@@ -156,13 +221,32 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${isPositive ? 'bg-green-100' : 'bg-red-100'} ${changeColor}`}>
-            <TrendingUp 
-              size={14} 
-              className={isPositive ? '' : 'transform rotate-180'} 
-            />
+            {isPositive ? (
+              <ArrowUp size={14} />
+            ) : (
+              <ArrowDown size={14} />
+            )}
             <span className="ml-1">{change}</span>
           </div>
         </div>
+        
+        {/* Mini trend chart */}
+        {miniChartData.length > 1 && (
+          <div className="h-12 mt-3">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={miniChartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke={style.line} 
+                  strokeWidth={2} 
+                  dot={false} 
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
     )
   }
@@ -198,17 +282,17 @@ const AdminDashboard = () => {
             <span>Quick filter:</span>
           </div>
           <div className="flex space-x-2">
-            {['7', '30', '90'].map((period) => (
+            {availablePeriods.map((period) => (
               <button
-                key={period}
-                onClick={() => setSelectedPeriod(period)}
+                key={period.value}
+                onClick={() => handlePeriodChange(period.value)}
                 className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  selectedPeriod === period
+                  selectedPeriod === period.value
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                {period === '7' ? 'Last 7 days' : period === '30' ? 'Last 30 days' : 'Last 3 months'}
+                {period.label}
               </button>
             ))}
           </div>
@@ -224,6 +308,12 @@ const AdminDashboard = () => {
           <div className="bg-white p-6 rounded-lg shadow-sm lg:col-span-2 border border-gray-100">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-semibold text-gray-800">Sales Overview</h2>
+              <div className="text-sm font-medium text-gray-600">
+                {selectedPeriod === '7' ? 'Last 7 days' : 
+                 selectedPeriod === '30' ? 'Last 30 days' :
+                 selectedPeriod === '90' ? 'Last 3 months' :
+                 selectedPeriod === '180' ? 'Last 6 months' : 'Last year'}
+              </div>
             </div>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -327,6 +417,7 @@ const AdminDashboard = () => {
                     <th className="pb-3 font-medium">Customer</th>
                     <th className="pb-3 font-medium">Status</th>
                     <th className="pb-3 font-medium">Amount</th>
+                    <th className="pb-3 font-medium">Date</th>
                     <th className="pb-3 font-medium text-right">Action</th>
                   </tr>
                 </thead>
@@ -339,6 +430,7 @@ const AdminDashboard = () => {
                         <StatusBadge status={o.status} />
                       </td>
                       <td className="py-3 font-medium">${o.amount}</td>
+                      <td className="py-3 text-gray-500">{o.date || 'N/A'}</td>
                       <td className="py-3 text-right">
                         <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                           Details
