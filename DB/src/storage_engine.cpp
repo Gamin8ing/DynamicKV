@@ -3,6 +3,7 @@
 #include "../include/kv/utils.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
@@ -101,6 +102,52 @@ bool StorageEngine::erase(const std::string &key) {
   // if found append a tombstone in place of key
   seg_mgr.append(hash, std::string_view(key), "");
   return true;
+}
+
+std::vector<std::pair<std::string, std::string>>
+StorageEngine::get_all() const {
+  std::vector<std::pair<std::string, std::string>> results;
+
+  // This is inefficient as we'll read all files - in a real implementation,
+  // you'd want this to be optimized with some form of index
+  std::filesystem::path data_path(dir);
+  for (const auto &entry : std::filesystem::directory_iterator(data_path)) {
+    if (entry.path().extension() == ".kv") {
+      std::ifstream file(entry.path(), std::ios::binary);
+
+      while (file) {
+        // Read record header
+        uint32_t recordLen, keyLen, valLen;
+        uint8_t flags, reserved;
+
+        // Try to read record length
+        if (!file.read(reinterpret_cast<char *>(&recordLen), sizeof(recordLen)))
+          break;
+
+        // Read the rest of the header
+        file.read(reinterpret_cast<char *>(&keyLen), sizeof(keyLen));
+        file.read(reinterpret_cast<char *>(&valLen), sizeof(valLen));
+        file.read(reinterpret_cast<char *>(&flags), sizeof(flags));
+        file.read(reinterpret_cast<char *>(&reserved), sizeof(reserved));
+
+        // Read key and value
+        std::string key(keyLen, '\0');
+        std::string val(valLen, '\0');
+        file.read(key.data(), keyLen);
+        file.read(val.data(), valLen);
+
+        // Skip CRC
+        file.seekg(sizeof(uint32_t), std::ios::cur);
+
+        // If it's not a tombstone, add to results
+        if (flags != 0) {
+          results.emplace_back(key, val);
+        }
+      }
+    }
+  }
+
+  return results;
 }
 
 } // namespace kv

@@ -28,6 +28,14 @@ Config Config::load(std::string conf_path) {
   c.data_dir = j["data_dir"];
   c.segment_size = j["segment_size_mb"].get<size_t>() * 1024 * 1024;
   c.file_ext = j["file_extension"];
+
+  // Add new config parameters
+  c.index_ext = j.value("index_extension", ".idx");
+  c.bloom_ext = j.value("bloom_extension", ".bf");
+  c.bloom_bits_kb = j.value("bloom_bits_kb", 8);
+  c.bloom_hashes = j.value("bloom_hashes", 4);
+  c.thread_pool_sz = j.value("thread_pool_size", 4);
+
   return c;
 }
 
