@@ -16,7 +16,6 @@ SegmentMgr::SegmentMgr(const std::string &dir, size_t seg_size)
 
 // destructor to delete all the segment objects
 SegmentMgr::~SegmentMgr() {
-  std::cout << "deleting everything" << '\n';
   delete current;
   for (auto *s : closed) {
     delete s;

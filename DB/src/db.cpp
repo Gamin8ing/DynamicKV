@@ -23,16 +23,18 @@ int main(int argc, char *argv[]) {
   kv::SearchIndex searchIndex(storage);
 
   // Example: Create a user
-  users.createUser("user1", "john_doe", "john@example.com",
-                   "hashed_password123");
+  users.createUser("user2", "subh_bsdka", "johsdasdfn@example.com",
+                   "hashed_password123sdfaasdf");
+  users.createUser("user4", "johasdfasdfhn_doe", "john@sdfasdfasdfexample.com",
+                   "hashed_sdfasdfpassword123");
 
   // Example: Create products
-  products.createProduct("product1", "iPhone 14", 999.99, "Latest iPhone model",
+  products.createProduct("product6", "iPhone 16", 999.99, "Latest iPhone model",
                          {"electronics", "smartphones", "apple"});
-  products.createProduct("product2", "Samsung Galaxy S23", 899.99,
+  products.createProduct("product12", "Samsung Galaxy S24", 899.99,
                          "Latest Samsung model",
                          {"electronics", "smartphones", "samsung"});
-  products.createProduct("product3", "AirPods Pro", 249.99,
+  products.createProduct("product30", "AirPods Pro iPhone", 249.99,
                          "Wireless Earbuds from Apple",
                          {"electronics", "audio", "apple"});
 
