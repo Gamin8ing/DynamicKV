@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdynkvlibs.a CMakeFiles/dynkvlibs.dir/config.cpp.o CMakeFiles/dynkvlibs.dir/bloomfilter.cpp.o CMakeFiles/dynkvlibs.dir/segment.cpp.o CMakeFiles/dynkvlibs.dir/segment_mgr.cpp.o CMakeFiles/dynkvlibs.dir/storage_engine.cpp.o CMakeFiles/dynkvlibs.dir/thread_pool.cpp.o
+/usr/bin/ranlib libdynkvlibs.a

@@ -1,0 +1,4 @@
+/mnt/d/RESOURCES/Proj/DynamicKV/DB/src/build/CMakeFiles/dynkvlibs.dir
+/mnt/d/RESOURCES/Proj/DynamicKV/DB/src/build/CMakeFiles/dynkv_main.dir
+/mnt/d/RESOURCES/Proj/DynamicKV/DB/src/build/CMakeFiles/edit_cache.dir
+/mnt/d/RESOURCES/Proj/DynamicKV/DB/src/build/CMakeFiles/rebuild_cache.dir
