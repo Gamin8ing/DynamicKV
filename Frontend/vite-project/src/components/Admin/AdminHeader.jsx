@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Bell,
   UserCircle,
@@ -7,13 +7,12 @@ import {
   Settings,
   User,
   Check,
-  X,
   Clock,
   AlertCircle
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import API from '../../utils/api'
-import { AdminDataContext } from '../../context/AdminContext'
+import { useUser } from '../../context/UserContext'
 
 // Helper to format time
 const formatTimeAgo = (dateString) => {
@@ -86,7 +85,8 @@ const NotificationItem = ({ notification, onMarkAsRead }) => {
 };
 
 const AdminHeader = () => {
-  const { user, logout } = useContext(AdminDataContext)
+  // Use the UserContext instead of AdminDataContext
+  const { user, logout } = useUser()
   const navigate = useNavigate()
 
   // Dropdown states
@@ -169,6 +169,10 @@ const AdminHeader = () => {
       console.error('Failed to mark all notifications as read:', error);
     }
   }
+
+  // Get first and last name from user object
+  const firstName = user?.name?.split(' ')[0] || 'Admin';
+  const lastName = user?.name?.split(' ').slice(1).join(' ') || '';
 
   return (
     <header className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
@@ -309,7 +313,7 @@ const AdminHeader = () => {
             >
               <UserCircle size={20} className="text-gray-600" />
               <span className="text-sm font-medium text-gray-700">
-                {user?.fullName?.firstName || 'Admin'}
+                {firstName}
               </span>
               <ChevronDown size={16} className="text-gray-500" />
             </button>
@@ -319,7 +323,7 @@ const AdminHeader = () => {
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 py-1 overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="text-sm font-medium text-gray-800">
-                    {user?.fullName?.firstName} {user?.fullName?.lastName}
+                    {firstName} {lastName}
                   </p>
                   <p className="text-xs text-gray-500 mt-1 truncate">
                     {user?.email || 'admin@example.com'}
