@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { UserProvider } from './context/UserContext';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 
-import Home from './pages/Home.jsx'
+import Home from './pages/User/Home.jsx'
 import UserLogin from './pages/User/UserLogin.jsx'
 import UserSignup from './pages/User/UserSignup.jsx'
 
