@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/dynkv_main.dir/link.d CMakeFiles/dynkv_main.dir/main.cpp.o -o dynkv_main  libdynkvlibs.a /usr/lib/libfmt.so.11.1.4
