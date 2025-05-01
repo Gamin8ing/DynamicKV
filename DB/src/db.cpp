@@ -88,13 +88,13 @@ int main(int argc, char *argv[]) {
   kv::Config config = kv::Config::load("./config/db.conf");
   kv::StorageEngine engine(config.data_dir, config.segment_size);
 
-  for (int i = 0; i < 9000; i++) {
-    engine.erase(std::to_string(i + 1));
-  }
-
-  // for (int i = 0; i < 10000; i++) {
-  //   engine.put(std::to_string(i + 1), "val is: " + std::to_string(i + 1));
+  // for (int i = 0; i < 9000; i++) {
+  //   engine.erase(std::to_string(i + 1));
   // }
+
+  for (int i = 0; i < 9000; i++) {
+    engine.put(std::to_string(i + 1), "val is: " + std::to_string(i + 1));
+  }
 
   auto v = engine.get(std::to_string(9500));
 
@@ -104,15 +104,21 @@ int main(int argc, char *argv[]) {
     std::cout << "not found for 9500" << '\n';
   }
 
-  for (int i = 0; i < 10; i++) {
-    auto key = std::to_string((random() % 1000) + 8500);
-    auto v = engine.get(key);
+  // for (int i = 0; i < 10; i++) {
+  //   auto key = std::to_string((random() % 1000) + 8500);
+  //   auto v = engine.get(key);
+  //
+  //   if (v.has_value()) {
+  //     std::cout << "value of " << key << "is: " << v.value() << '\n';
+  //   } else {
+  //     std::cout << "not found" << '\n';
+  //   }
+  // }
+  auto all = engine.get_all(); // it returns a vector
 
-    if (v.has_value()) {
-      std::cout << "value of " << key << "is: " << v.value() << '\n';
-    } else {
-      std::cout << "not found" << '\n';
-    }
+  std::cout << "these are all of the things stored in the db" << '\n';
+  for (auto x : all) {
+    std::cout << x.first << ": " << x.second << '\n';
   }
 
   return 0;

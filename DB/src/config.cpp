@@ -36,6 +36,8 @@ Config Config::load(std::string conf_path) {
   c.bloom_hashes = j.value("bloom_hashes", 4);
   c.thread_pool_sz = j.value("thread_pool_size", 4);
 
+  std::cout << "the config is loaded with the data directory as: " << c.data_dir
+            << '\n';
   return c;
 }
 
