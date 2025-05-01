@@ -4,6 +4,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
+#include <ios>
+#include <iosfwd>
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
@@ -89,18 +92,51 @@ std::optional<std::string> StorageEngine::get(const std::string &key) {
   return valBuf;
 }
 
-// erase function
+// erase functionality, makes the previosly appended record to 0, makes it
+// tombstone
 bool StorageEngine::erase(const std::string &key) {
   uint64_t hash = fnv1a(key);
-  std::unique_lock lock(ind_mu);
-
-  SegmentOffset out;
-  if (!seg_mgr.lookup(hash, out)) {
-    return false;
+  SegmentOffset off;
+  {
+    std::shared_lock lock(ind_mu);
+    if (!seg_mgr.lookup(hash, off)) {
+      return false;
+    }
   }
 
-  // if found append a tombstone in place of key
-  seg_mgr.append(hash, std::string_view(key), "");
+  std::string path = dir + "/segment_" + std::to_string(off.segment_id) + ".kv";
+
+  // Open for update (read + write)
+  std::fstream file(path, std::ios::in | std::ios::out | std::ios::binary);
+  if (!file)
+    return false;
+
+  // Seek to the record offset
+  file.seekg(off.offset);
+  if (!file)
+    return false;
+
+  // Read header fields to locate the flag byte
+  uint32_t recordLen, keyLen, valLen;
+  uint8_t flags, reserved;
+  file.read(reinterpret_cast<char *>(&recordLen), sizeof(recordLen));
+  file.read(reinterpret_cast<char *>(&keyLen), sizeof(keyLen));
+  file.read(reinterpret_cast<char *>(&valLen), sizeof(valLen));
+
+  std::streampos flag_pos = file.tellg(); // Position of the flag byte
+  file.read(reinterpret_cast<char *>(&flags), sizeof(flags));
+  file.read(reinterpret_cast<char *>(&reserved), sizeof(reserved));
+
+  // Only set tombstone if not already set
+  if (flags == 0)
+    return true; // Already deleted
+
+  // Move file pointer back to flag position
+  file.seekp(flag_pos);
+  uint8_t tombstone = 0;
+  file.write(reinterpret_cast<char *>(&tombstone), sizeof(tombstone));
+  file.flush();
+
   return true;
 }
 
