@@ -1,93 +1,125 @@
-This is a project we are working on for our DBMS project. This include:
-1. Aashay Nema (IIT2023082)
-2. Bhavya Gupta (IIT2023070)
-3. Dhruv Samdhani (IIT2023090)
-4. Shaurya Bhandari (IIT2023084)
-5. Subhansh Naithani (IIT2023081)
+# DynamicKV
 
-**Project Title:** DynamicKV - A Scalable Web-Based Key-Value Store with Adaptive
-Consistency and Real-Time Synchronization
+**A Scalable Web-Based Key-Value Store with Adaptive Consistency and Real-Time Synchronization**
 
-**Description:** 
-DynamicKV is a modern NoSQL database system that implements a flexible, high-performance key-value store exposed through a web API. The system is designed to provide a foundation for web applications requiring scalable data storage with tunable consistency guarantees.
+DynamicKV began as our college DBMS project and evolved into a lightweight NoSQL engine with a REST API. It’s written in modern C++17, uses custom made HashMap based on Robin-Hood Hashing, and exposes data over HTTP via [Crow](https://crowcpp.org/). You can play with it as a standalone binary or integrate it into your own services.
 
-**Novelty:** 
-1. *Real-time Synchronization Mechanism*
-A subscription based system, if a high priority key is changes all the admins will get the notifications.
-2. *Intelligent Consistency Controls*
-3. *Performance-Optimized Storage Architecture*
-Caching of the queries that gets asked many times to save lookup times and store the rest data on the disk.
-4. *Enhanced Query Capabilities*
-Extend beyond basic CRUD operations by implementing limited query capabilities for values, such as filtering based on JSON fields or range queries on numeric values, without sacrificing the performance benefits of key-value architecture
-5. *Machine Learning Integration for API Optimization*
-Scope to implement Machine learning for query optimizations
-
-**Limitations of Existing Key-Value Store Solutions:**
-1. *Limited Query Flexibility*
-Most key-value stores are not optimized for querying beyond exact key lookups. They cannot filter value fields without scanning entire collections, making them inefficient for complex queries
-
-2. *Consistency-Availability Tradeoffs*
-Existing distributed key-value stores often struggle with balancing consistency and availability, typically sacrificing one for the other in failure scenarios
-
-3. *Operational Challenges*
-Traditional key-value stores lack:
-- Rollback capabilities in case of transaction failures
-- Standard query languages comparable to SQL
-- Optimized support for multiple values within a single key
-
-4. *Performance Under Write-Heavy Workloads*
-Many key-value stores struggle with performance degradation under write-intensive workloads due to their architectural design focused on read operations
-
-5. *Limited Data Structure Support*
-Most implementations support only simple data formats, lacking native support for complex objects or relationships between data items
-
-**Base paper:** [Amazon's Dynamo - their propetiery key-value based DB solution](https://www.semanticscholar.org/paper/7d906f6632f8740b540ce4d710f53ab0f97cfd5b)
-
------
-# Database 
-
-**Tech stack:** C/C++, STL containers, WASM (for networking)
-
-```mermaid
 ---
-Title: Basic Flow of the project
+
+## 🚀 Features
+
+- **Model-based storage**: Store any “model” (e.g. `users`, `products`, etc.) in its own folder under `data/`.  
+- **Segmented on-disk files**: Each model folder contains rolling segment files named:
+  - `.kv` — append-only records  
+  - `.idx` — in-disk index of key→offset pairs  
+  - `.bf` — Bloom filter for fast “not present” checks  
+- **Tunable segment sizing** via `config/db.conf`.  
+- **In-memory cache** with Robin-Hood hashing for hot keys.  
+- **Thread-safe** append, lookup, delete operations.  
+- **Pure-C++ REST API** using Crow — no external DB required.  
+
 ---
-flowchart TD
-    id1["DynamicKV"] --> id2["Interface"]
-    id1 --> id3["Parameterization"]
-    id1 ---> id4["Data Structure"]
-    id1 ---> id5["Data storage"]
-    id1 --> id6[Networking interface]
-    id1 --> id7[Error management]
-    id4 --> id8[Space Complexity]
-    id4 ---> id9[Time Complexity]
-    id5 --> id10[In memory vs On disk]
+
+## 📦 Tech Stack
+
+- **Core**: C++, STL, `<filesystem>`, `std::thread`/`mutex`, My own hashmap library  
+- **Networking**: [Crow](https://crowcpp.org/) (header-only, Flask-style)  
+- **Build & CLI**: GNU Makefile / `g++`` / `fmt` library  
+- **Configuration**: JSON (`nlohmann::json`)  
+
+---
+
+## 🏁 Quickstart
+
+### 1. Clone & Build
+
+```bash
+git clone https://github.com/Gamin8ing/DynamicKV.git
+cd DynamicKV
+make
+````
+
+This runs:
+
+```bash
+g++ -std=c++17 -O2 \
+    main.cpp config.cpp bloomfilter.cpp segment.cpp segment_mgr.cpp \
+    storage_engine.cpp thread_pool.cpp \
+    -Iinclude -lfmt -pthread \
+    -o dynamickv
 ```
 
----
-# Backend
+Alternatively, download a **prebuilt binary** from the [Releases](https://github.com/Gamin8ing/DynamicKV/releases) page and unpack it.
 
-**Tech Stack:** ExpressJS, Websocket, JWT auth, gRPC
+### 2. Configure
 
-The backend will mainly integrate our DB with the frontend. It will include the API restpoints for login, signup, deleting and adding the products.
+Edit **`config/db.conf`** to your liking (default below):
 
----
-# Frontend
-
-**Tech stack:** React, HTML, CSS, JavaScript, TailwindCSS
-
-Our main focus on frontend is to display the data being affected, namely showing two screens:
-
-```mermaid
-graph TD
-	a[FrontEnd] --> b[admin];
-	a --> c[user]
+```json
+{
+  "data_dir":        "./data",
+  "segment_size_mb": 64,
+  "file_extension":  ".kv",
+  "index_extension": ".idx",
+  "bloom_extension": ".bf",
+  "bloom_bits_kb":   8,
+  "bloom_hashes":    4,
+  "thread_pool_size":4
+}
 ```
 
-### Admin
-The admin panel will display all the data, in a list manner. 
-admin will have all the rights to delete and add new data too.
-### User
-the user panel will mainly display the real frontend the user will be interacting with. It will for now have basic user signin and signup.
-Further this will be more developed on.
+* `data_dir` is where your per-model folders (`users/`, `products/`, …) live.
+* Bloom filter & segment sizing come from here.
 
+### 3. Run
+
+```bash
+./dynamickv
+```
+
+By default it listens on port `8008`.
+
+---
+
+## 📚 API Documentation
+
+All endpoints use JSON. Base URL: `http://localhost:8008/`
+
+| Method   | Path             | Body (JSON)                         | Description                                                        |
+| -------- | ---------------- | ----------------------------------- | ------------------------------------------------------------------ |
+| `GET`    | `/`              | —                                   | List all models (subdirectories).                                  |
+| `POST`    | `/{model}`       | `{ "key": "...", ...other fields }` | Create model (if needed). If JSON, creates or updates `model/key`. |
+| `GET`    | `/{model}`       | —                                   | Get all key→value pairs in `model`.                                |
+| `GET`    | `/{model}/{key}` | —                                   | Get the single JSON object `model/key`.                            |
+| `DELETE` | `/{model}`       | —                                   | Delete entire model and files.                                     |
+| `DELETE` | `/{model}/{key}` | —                                   | Delete one key in the model.                                       |
+
+---
+
+## 💾 Under the Hood
+
+1. **Append-only `.kv`**: each record stores length, key, value, CRC.
+2. **`.idx`**: binary list of (key-hash, file-offset) pairs.
+3. **`.bf`**: Bloom filter bitset for fast “definitely not” checks.
+4. **In-memory**: Robin-Hood hash map caches hot indexes for O(1) access.
+5. **Segment rotation**: when a segment exceeds `segment_size_mb`, a new one is created automatically.
+
+---
+
+## 🎨 Features
+
+* **Clean architecture**: clearly separated `include/` and `src/`.
+* **Modern C++**: uses C++17 features—`<filesystem>`, `std::optional`, threads.
+* **Build flexibility**: Makefile for quick compile, optional prebuilt binaries.
+* **API-first design**: Crow-based REST layer shows real-world web integration.
+* **Scalable design**: segments, bloom filters, in-memory caching—all hallmark patterns in production KV stores.
+
+---
+
+## 🤝 Contributing
+
+1. Fork & clone
+2. Create a feature branch
+3. Submit a PR
+
+---
