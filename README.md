@@ -88,21 +88,12 @@ All endpoints use JSON. Base URL: `http://localhost:8008/`
 | Method   | Path             | Body (JSON)                         | Description                                                        |
 | -------- | ---------------- | ----------------------------------- | ------------------------------------------------------------------ |
 | `GET`    | `/`              | —                                   | List all models (subdirectories).                                  |
-| `POST`    | `/{model}`       | `{ "key": "...", ...other fields }` | Create model (if needed). If JSON, creates or updates `model/key`. |
+| `POST`   | `/{model}/{key}` | `{ "key": "...", ...other fields }` | Create model (if needed). If JSON, creates or updates `model/key`. |
 | `GET`    | `/{model}`       | —                                   | Get all key→value pairs in `model`.                                |
 | `GET`    | `/{model}/{key}` | —                                   | Get the single JSON object `model/key`.                            |
 | `DELETE` | `/{model}`       | —                                   | Delete entire model and files.                                     |
 | `DELETE` | `/{model}/{key}` | —                                   | Delete one key in the model.                                       |
 
----
-
-## 💾 Under the Hood
-
-1. **Append-only `.kv`**: each record stores length, key, value, CRC.
-2. **`.idx`**: binary list of (key-hash, file-offset) pairs.
-3. **`.bf`**: Bloom filter bitset for fast “definitely not” checks.
-4. **In-memory**: Robin-Hood hash map caches hot indexes for O(1) access.
-5. **Segment rotation**: when a segment exceeds `segment_size_mb`, a new one is created automatically.
 
 ---
 
@@ -122,4 +113,3 @@ All endpoints use JSON. Base URL: `http://localhost:8008/`
 2. Create a feature branch
 3. Submit a PR
 
----
