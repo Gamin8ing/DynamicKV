@@ -94,17 +94,6 @@ All endpoints use JSON. Base URL: `http://localhost:8008/`
 | `DELETE` | `/{model}`       | —                                   | Delete entire model and files.                                     |
 | `DELETE` | `/{model}/{key}` | —                                   | Delete one key in the model.                                       |
 
-
----
-
-## 🎨 Features
-
-* **Clean architecture**: clearly separated `include/` and `src/`.
-* **Modern C++**: uses C++17 features—`<filesystem>`, `std::optional`, threads.
-* **Build flexibility**: Makefile for quick compile, optional prebuilt binaries.
-* **API-first design**: Crow-based REST layer shows real-world web integration.
-* **Scalable design**: segments, bloom filters, in-memory caching—all hallmark patterns in production KV stores.
-
 ---
 
 ## 🤝 Contributing
