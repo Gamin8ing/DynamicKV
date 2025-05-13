@@ -15,39 +15,51 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("dynamicKV_user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check for existing session on initial load
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const savedUser = localStorage.getItem("dynamicKV_user");
-        if (savedUser) {
-          const userData = JSON.parse(savedUser);
-          setUser(userData);
+  // // Check for existing session on initial load
+  // useEffect(() => {
+  //   const checkAuthStatus = async () => {
+  //     try {
+  //       const savedUser = localStorage.getItem("dynamicKV_user");
+  //       if (savedUser) {
+  //         const userData = JSON.parse(savedUser);
+  //         setUser(userData);
+  //
+  //         // Verify token is still valid with the backend
+  //         // try {
+  //         //   await authAPI.getMe();
+  //         // } catch (err) {
+  //         //   // If token is invalid, clear local storage and user state
+  //         //   if (err.response && err.response.status === 401) {
+  //         //     localStorage.removeItem("dynamicKV_user");
+  //         //     setUser(null);
+  //         //   }
+  //         // }
+  //       }
+  //     } catch (err) {
+  //       console.error("Authentication check failed:", err);
+  //       setError("Failed to restore authentication session");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   checkAuthStatus();
+  // }, []);
 
-          // Verify token is still valid with the backend
-          try {
-            await authAPI.getMe();
-          } catch (err) {
-            // If token is invalid, clear local storage and user state
-            if (err.response && err.response.status === 401) {
-              localStorage.removeItem("dynamicKV_user");
-              setUser(null);
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Authentication check failed:", err);
-        setError("Failed to restore authentication session");
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkAuthStatus();
-  }, []);
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("dynamicKV_user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("dynamicKV_user");
+    }
+    setLoading(false);
+  }, [user]);
 
   // Debug: log whenever context value changes
   useEffect(() => {
@@ -61,16 +73,17 @@ export const UserProvider = ({ children }) => {
   }, [user, loading, error]);
 
   // Login function
-  const login = async (email, password, remember = false) => {
+  const login = async (username, password, remember = false) => {
     setLoading(true);
     setError(null);
     try {
-      const { user, token } = await authAPI.login(email, password);
+      const { user, token } = await authAPI.login(username, password);
 
+      console.log(user, " ----------->");
       // Create user object with token
       const userData = {
-        id: user.id,
-        name: user.username,
+        id: user._id,
+        username: user.username,
         email: user.email,
         role: user.role,
         token,
@@ -99,6 +112,7 @@ export const UserProvider = ({ children }) => {
   const register = async (userData) => {
     setLoading(true);
     setError(null);
+    console.log("this is the jdata called ", userData);
     try {
       const { user, token } = await authAPI.register(userData);
 
@@ -144,4 +158,3 @@ export const UserProvider = ({ children }) => {
 };
 
 export default UserProvider;
-

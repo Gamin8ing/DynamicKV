@@ -1,7 +1,7 @@
 // src/pages/User/UserLogin.jsx
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useUser } from "../../context/UserContext";
 
 // Custom logo component for Dynamic KV
 const DynamicKVLogo = () => (
@@ -14,7 +14,8 @@ const DynamicKVLogo = () => (
             className="absolute w-1.5 h-1.5 rounded-full"
             style={{
               transform: `rotate(${i * 15}deg) translateY(-24px)`,
-              background: i % 3 === 0 ? '#72D3D5' : i % 3 === 1 ? '#63D2FF' : '#BED8D4',
+              background:
+                i % 3 === 0 ? "#72D3D5" : i % 3 === 1 ? "#63D2FF" : "#BED8D4",
               opacity: 0.8 + (i % 3) * 0.1,
             }}
           />
@@ -29,55 +30,62 @@ const UserLogin = () => {
   const { login, isAuthenticated, loading: authLoading } = useUser();
   const navigate = useNavigate();
   const [isAdminLogin, setIsAdminLogin] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  useEffect(() => {
-    if (isAuthenticated()) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
+  // useEffect(() => {
+  //   if (isAuthenticated()) {
+  //     if ()
+  //     navigate("/dashboard");
+  //   }
+  // }, [isAuthenticated, navigate]);
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const toggleLoginType = isAdmin => {
-    setIsAdminLogin(isAdmin);
-    setErrors({});
-    setFormData({ email: '', password: '' });
-  };
+  // const toggleLoginType = (isAdmin) => {
+  //   setIsAdminLogin(isAdmin);
+  //   setErrors({});
+  //   // setFormData({ username: "", password: "" });
+  // };
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.password) newErrors.password = 'Password is required';
+    if (!formData.username) newErrors.email = "Username is required";
+    if (!formData.password) newErrors.password = "Password is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
     try {
       const result = await login(
-        formData.email,
+        formData.username,
         formData.password,
         isAdminLogin,
-        rememberMe
+        rememberMe,
       );
       if (result.success) {
-        navigate(isAdminLogin ? '/admin/dashboard' : '/dashboard');
+        console.log("logign as ", isAdminLogin, " is  --------------");
+        if (isAdminLogin == true) {
+          navigate("/admin/dashboard");
+          navigate("/admin/dashboard");
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
       } else {
-        setErrors({ form: result.error || 'Login failed. Please try again.' });
+        setErrors({ form: result.error || "Login failed. Please try again." });
       }
     } catch {
-      setErrors({ form: 'Login failed. Please try again.' });
+      setErrors({ form: "Login failed. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -99,8 +107,8 @@ const UserLogin = () => {
         className="fixed inset-0 bg-cover bg-center z-0 opacity-50"
         style={{
           backgroundImage:
-            'radial-gradient(circle at center, #F7F9F9 0%, #BED8D4 30%, #72D3D5 60%, #63D2FF 100%)',
-          filter: 'blur(60px)',
+            "radial-gradient(circle at center, #F7F9F9 0%, #BED8D4 30%, #72D3D5 60%, #63D2FF 100%)",
+          filter: "blur(60px)",
         }}
       />
       <div className="max-w-md w-full mx-4 z-10">
@@ -114,21 +122,21 @@ const UserLogin = () => {
             {/* Login type selector */}
             <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
               <button
-                onClick={() => toggleLoginType(false)}
+                onClick={() => setIsAdminLogin(false)}
                 className={`flex-1 text-center py-2 rounded-lg font-medium transition-colors duration-300 ${
                   !isAdminLogin
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-500 hover:bg-white hover:bg-opacity-50'
+                    ? "bg-white text-black shadow-sm"
+                    : "text-gray-500 hover:bg-white hover:bg-opacity-50"
                 }`}
               >
                 User
               </button>
               <button
-                onClick={() => toggleLoginType(true)}
+                onClick={() => setIsAdminLogin(true)}
                 className={`flex-1 text-center py-2 rounded-lg font-medium transition-colors duration-300 ${
                   isAdminLogin
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-500 hover:bg-white hover:bg-opacity-50'
+                    ? "bg-white text-black shadow-sm"
+                    : "text-gray-500 hover:bg-white hover:bg-opacity-50"
                 }`}
               >
                 Admin
@@ -144,13 +152,13 @@ const UserLogin = () => {
             <form onSubmit={handleSubmit}>
               <div className="mb-6 relative">
                 <input
-                  type="email"
-                  name="email"
-                  placeholder="Email or Phone Number"
-                  value={formData.email}
+                  type="text"
+                  name="username"
+                  placeholder="Enter your username"
+                  value={formData.username}
                   onChange={handleChange}
                   className={`w-full p-4 pr-10 bg-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 text-black placeholder-gray-500 ${
-                    errors.email ? 'border-red-500 focus:ring-red-400' : ''
+                    errors.email ? "border-red-500 focus:ring-red-400" : ""
                   }`}
                 />
                 {errors.email && (
@@ -158,12 +166,12 @@ const UserLogin = () => {
                     {errors.email}
                   </p>
                 )}
-                {formData.email && (
+                {formData.username && (
                   <button
                     type="button"
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     onClick={() =>
-                      setFormData(prev => ({ ...prev, email: '' }))
+                      setFormData((prev) => ({ ...prev, username: "" }))
                     }
                   >
                     ✕
@@ -179,7 +187,7 @@ const UserLogin = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full p-4 bg-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 text-black placeholder-gray-500 ${
-                    errors.password ? 'border-red-500 focus:ring-red-400' : ''
+                    errors.password ? "border-red-500 focus:ring-red-400" : ""
                   }`}
                 />
                 {errors.password && (
@@ -194,19 +202,13 @@ const UserLogin = () => {
                   <input
                     type="checkbox"
                     checked={rememberMe}
-                    onChange={() => setRememberMe(prev => !prev)}
+                    onChange={() => setRememberMe((prev) => !prev)}
                     className="h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-sm text-gray-600 font-medium">
                     Keep me signed in
                   </span>
                 </label>
-                <Link
-                  to="#"
-                  className="text-sm font-bold text-blue-500 hover:text-blue-700"
-                >
-                  Forgot password?
-                </Link>
               </div>
 
               <button
@@ -217,17 +219,17 @@ const UserLogin = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 group-hover:from-blue-500 group-hover:via-cyan-500 group-hover:to-teal-500 transition-all duration-300"></div>
                 <span className="relative">
                   {isLoading
-                    ? 'Signing in...'
+                    ? "Signing in..."
                     : isAdminLogin
-                    ? 'Sign in as Admin'
-                    : 'Sign in'}
+                      ? "Sign in as Admin"
+                      : "Sign in"}
                 </span>
               </button>
             </form>
 
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-700 font-medium">
-                Don't have an account?{' '}
+                Don't have an account?{" "}
                 <Link
                   to="/signup"
                   className="font-bold text-blue-500 hover:text-blue-700"

@@ -1,7 +1,7 @@
 // src/pages/User/UserSignup.jsx
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useUser } from "../../context/UserContext";
 
 // Custom logo component for Dynamic KV
 const DynamicKVLogo = () => (
@@ -14,7 +14,8 @@ const DynamicKVLogo = () => (
             className="absolute w-1.5 h-1.5 rounded-full"
             style={{
               transform: `rotate(${i * 15}deg) translateY(-24px)`,
-              background: i % 3 === 0 ? '#72D3D5' : i % 3 === 1 ? '#63D2FF' : '#BED8D4',
+              background:
+                i % 3 === 0 ? "#72D3D5" : i % 3 === 1 ? "#63D2FF" : "#BED8D4",
               opacity: 0.8 + (i % 3) * 0.1,
             }}
           />
@@ -29,10 +30,10 @@ const UserSignup = () => {
   const { register, isAuthenticated, loading: authLoading } = useUser();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -40,51 +41,56 @@ const UserSignup = () => {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      navigate('/dashboard');
+      navigate("/");
     }
   }, [isAuthenticated, navigate]);
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    console.log("this changed -----------> ", name, value);
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.name) newErrors.name = 'Name is required';
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.password) newErrors.password = 'Password is required';
+    if (!formData.name) newErrors.name = "Name is required";
+    if (!formData.email) newErrors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Email is invalid";
+    if (!formData.password) newErrors.password = "Password is required";
     else if (formData.password.length < 6)
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     if (!formData.confirmPassword)
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = "Please confirm your password";
     else if (formData.confirmPassword !== formData.password)
-      newErrors.confirmPassword = 'Passwords do not match';
-    if (!acceptTerms) newErrors.terms = 'You must accept the terms and conditions';
+      newErrors.confirmPassword = "Passwords do not match";
+    if (!acceptTerms)
+      newErrors.terms = "You must accept the terms and conditions";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
     try {
       const result = await register({
-        name: formData.name,
+        username: formData.name,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       });
       if (result.success) {
-        alert('Account created successfully! Please login.');
-        navigate('/login');
+        alert("Account created successfully! Please login.");
+        navigate("/login");
       } else {
-        setErrors({ form: result.error || 'Account creation failed. Please try again.' });
+        setErrors({
+          form: result.error || "Account creation failed. Please try again.",
+        });
       }
     } catch {
-      setErrors({ form: 'Account creation failed. Please try again.' });
+      setErrors({ form: "Account creation failed. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -106,8 +112,8 @@ const UserSignup = () => {
         className="fixed inset-0 bg-cover bg-center z-0 opacity-50"
         style={{
           backgroundImage:
-            'radial-gradient(circle at center, #F7F9F9 0%, #BED8D4 30%, #72D3D5 60%, #63D2FF 100%)',
-          filter: 'blur(60px)',
+            "radial-gradient(circle at center, #F7F9F9 0%, #BED8D4 30%, #72D3D5 60%, #63D2FF 100%)",
+          filter: "blur(60px)",
         }}
       />
       <div className="max-w-md w-full mx-4 z-10">
@@ -133,7 +139,7 @@ const UserSignup = () => {
                   value={formData.name}
                   onChange={handleChange}
                   className={`w-full p-4 bg-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 text-black placeholder-gray-500 ${
-                    errors.name ? 'border-red-500 focus:ring-red-400' : ''
+                    errors.name ? "border-red-500 focus:ring-red-400" : ""
                   }`}
                 />
                 {errors.name && (
@@ -151,7 +157,7 @@ const UserSignup = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full p-4 bg-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 text-black placeholder-gray-500 ${
-                    errors.email ? 'border-red-500 focus:ring-red-400' : ''
+                    errors.email ? "border-red-500 focus:ring-red-400" : ""
                   }`}
                 />
                 {errors.email && (
@@ -169,7 +175,7 @@ const UserSignup = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full p-4 bg-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 text-black placeholder-gray-500 ${
-                    errors.password ? 'border-red-500 focus:ring-red-400' : ''
+                    errors.password ? "border-red-500 focus:ring-red-400" : ""
                   }`}
                 />
                 {errors.password && (
@@ -187,7 +193,9 @@ const UserSignup = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   className={`w-full p-4 bg-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 text-black placeholder-gray-500 ${
-                    errors.confirmPassword ? 'border-red-500 focus:ring-red-400' : ''
+                    errors.confirmPassword
+                      ? "border-red-500 focus:ring-red-400"
+                      : ""
                   }`}
                 />
                 {errors.confirmPassword && (
@@ -202,16 +210,22 @@ const UserSignup = () => {
                   <input
                     type="checkbox"
                     checked={acceptTerms}
-                    onChange={() => setAcceptTerms(prev => !prev)}
+                    onChange={() => setAcceptTerms((prev) => !prev)}
                     className="h-4 w-4 text-blue-500 focus:ring-blue-400 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-sm text-gray-700 font-medium">
-                    I agree to the{' '}
-                    <Link to="#" className="font-bold text-blue-500 hover:text-blue-700">
+                    I agree to the{" "}
+                    <Link
+                      to="#"
+                      className="font-bold text-blue-500 hover:text-blue-700"
+                    >
                       Terms
-                    </Link>{' '}
-                    and{' '}
-                    <Link to="#" className="font-bold text-blue-500 hover:text-blue-700">
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      to="#"
+                      className="font-bold text-blue-500 hover:text-blue-700"
+                    >
                       Privacy Policy
                     </Link>
                   </span>
@@ -230,14 +244,14 @@ const UserSignup = () => {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 group-hover:from-blue-500 group-hover:via-cyan-500 group-hover:to-teal-500 transition-all duration-300"></div>
                 <span className="relative">
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                  {isLoading ? "Creating Account..." : "Create Account"}
                 </span>
               </button>
             </form>
 
             <div className="px-8 py-4 bg-gray-50 border-t border-gray-200 text-center">
               <p className="text-sm text-gray-700">
-                Already have an account?{' '}
+                Already have an account?{" "}
                 <Link
                   to="/login"
                   className="font-bold text-blue-500 hover:text-blue-700"

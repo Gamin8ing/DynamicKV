@@ -1,35 +1,21 @@
 {
-  "name": "dkv-backend",
+  "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "keywords": [
-    "dynamickv",
-    "kv",
-    "dkv"
-  ],
-  "homepage": "https://github.com/Gamin8ing/DynamicKV#readme",
-  "bugs": {
-    "url": "https://github.com/Gamin8ing/DynamicKV/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Gamin8ing/DynamicKV.git"
-  },
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "axios": "^1.8.4",
-    "bcryptjs": "^3.0.2",
+    "axios": "^1.9.0",
+    "bcrypt": "^5.1.1",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.10"
   }
 }
