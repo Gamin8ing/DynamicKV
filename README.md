@@ -100,5 +100,5 @@ All endpoints use JSON. Base URL: `http://localhost:8008/`
 
 1. Fork & clone
 2. Create a feature branch
-3. Submit a PR
+3. Submit a PR  
 
