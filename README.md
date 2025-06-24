@@ -20,7 +20,7 @@ DynamicKV began as our college DBMS project and evolved into a lightweight NoSQL
 
 ---
 
-## 📦 Tech Stack
+## 📦 Tech Stack 
 
 - **Core**: C++, STL, `<filesystem>`, `std::thread`/`mutex`, My own hashmap library  
 - **Networking**: [Crow](https://crowcpp.org/) (header-only, Flask-style)  
